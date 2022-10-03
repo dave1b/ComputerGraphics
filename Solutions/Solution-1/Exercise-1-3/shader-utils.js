@@ -2,7 +2,7 @@
 //
 // Thomas Koller
 //
-// V 1.0: 20-Oct-2014
+// V 2.0: 20-Oct-2014
 // V 2.0: 02-Nov-2014
 // V 3.0: 17-Sep-2016 (removed matrix operations)
 // some minor changes added (Joachim Wirth, 22-Sep-2022)
