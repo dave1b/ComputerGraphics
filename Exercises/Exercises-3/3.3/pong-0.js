@@ -15,19 +15,15 @@ var gl;
 
 // we keep all local parameters for the program in a single object
 
-var ctx =
-    {
-        shaderProgram: -1,
-        aVertexPositionId: -1,
-        uColorId: -1,
-        uProjectionMatId: -1,
-        uModelMatId: -1
-    };
+var ctx = {
+    shaderProgram: -1, aVertexPositionId: -1, uColorId: -1, uProjectionMatId: -1, uModelMatId: -1
+};
 
 
 class GameObjects {
-    constructor(scalingX, scalingY, translateX, translateY) {
+    constructor(scalingX, scalingY, translateX, translateY, colorArray = [1, 1, 1, 1]) {
         this.buffer = -1;
+        this.color = [] = colorArray;
         this.scaleX = scalingX;
         this.scaleY = scalingY;
         this.translateX = translateX;
@@ -42,13 +38,30 @@ class GameManager {
         this.scorePlayer2 = 0;
         this.ballDirectionX = -1;
         this.ballDirectionY = 0;
+        this.isGameRunning = false;
+    }
+
+    updateUI() {
+        document.getElementById("score").innerText = this.scorePlayer1 + ":" + this.scorePlayer2;
+        if (this.scorePlayer1 == this.scoreToWin) {
+            alert("Player 1 has won!  \n Final Score " + this.scorePlayer1 + ":" + this.scorePlayer2);
+            this.resetGame()
+        } else if (this.scorePlayer2 == this.scoreToWin) {
+            alert("Player 2 has won! \nFinal Score " + this.scorePlayer1 + ":" + this.scorePlayer2);
+            this.resetGame()
+        }
+    }
+
+    resetGame() {
+        this.scorePlayer1 = 0;
+        this.scorePlayer2 = 0;
     }
 }
 
-var player1 = new GameObjects(1, 5, -350, 0);
-var player2 = new GameObjects(1, 5, 350, 0);
+var player1 = new GameObjects(1, 5, -350, 0, [.3, .3, 1, 1]);
+var player2 = new GameObjects(1, 5, 350, 0, [1, 1, .2, 1]);
 let net = new GameObjects(.5, 60, 0, 0);
-var ball = new GameObjects(1, 1, 0, 0);
+var ball = new GameObjects(1, 1, 0, 0, [.5, 1, .25, 1]);
 var gameManager = new GameManager(5);
 
 /**
@@ -62,7 +75,26 @@ function startup() {
     initGL();
     window.addEventListener('keyup', onKeyup, false);
     window.addEventListener('keydown', onKeydown, false);
+    draw();
+}
+
+function startGame() {
+    var startDirection = 0;
+    while (startDirection == 0) {
+        startDirection = Math.floor(Math.random() * (-1 - 2)) + 2;
+    }
+    gameManager.ballDirectionX = startDirection;
+    gameManager.isGameRunning = true;
     drawAnimated();
+}
+
+function resetGame() {
+    gameManager.isGameRunning = false;
+    gameManager.resetGame();
+    player1.translateY = 0;
+    player2.translateY = 0;
+    resetBall();
+    draw();
 }
 
 
@@ -93,8 +125,7 @@ function setUpAttributesAndUniforms() {
 
     // Set up the projection matrix
     var projectionMat = mat3.create();
-    mat3.fromScaling(projectionMat,
-        [2.0 / gl.drawingBufferWidth, 2.0 / gl.drawingBufferHeight]);
+    mat3.fromScaling(projectionMat, [2.0 / gl.drawingBufferWidth, 2.0 / gl.drawingBufferHeight]);
     gl.uniformMatrix3fv(ctx.uProjectionMatId, false, projectionMat);
 
     /**
@@ -103,13 +134,7 @@ function setUpAttributesAndUniforms() {
 }
 
 function setUpBuffers() {
-    var vertices =
-        [
-            5, 5,
-            5, -5,
-            -5, -5,
-            -5, 5,
-        ];
+    var vertices = [5, 5, 5, -5, -5, -5, -5, 5,];
 
 
     "use strict";
@@ -121,6 +146,7 @@ function setUpBuffers() {
     ball.buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, ball.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+
     // Player 1 Buffer
     player1.buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, player1.buffer);
@@ -160,7 +186,7 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, net.buffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
-    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.uniform4fv(ctx.uColorId, net.color);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
     // Ball
@@ -171,7 +197,7 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, ball.buffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
-    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.uniform4fv(ctx.uColorId, ball.color);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
     // Player 1
@@ -182,7 +208,7 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, player1.buffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
-    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.uniform4fv(ctx.uColorId, player1.color);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
     // Player 2
@@ -193,7 +219,7 @@ function draw() {
     gl.bindBuffer(gl.ARRAY_BUFFER, player2.buffer);
     gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
-    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.uniform4fv(ctx.uColorId, player2.color);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
 }
@@ -201,73 +227,76 @@ function draw() {
 
 // Window frame
 var previousTimestamp = 0;
+var timeCounterInMS = 0;
+let frameIntervalInMS = 2;
+var timeIntevall = 0;
 
 function drawAnimated(timeStamp) {
-    timeIntevall = timeStamp - previousTimestamp;
-    previousTimestamp = timeStamp;
-
-    // console.log("time: ", timeIntevall);
-
+    if (!gameManager.isGameRunning) {
+        return
+    }
+    if (!isNaN(timeStamp)) {
+        timeIntevall = timeStamp - previousTimestamp;
+        previousTimestamp = timeStamp;
+    }
+    timeCounterInMS += timeIntevall;
 
     if (isDown(key.W)) {
-        player1.translateY += .5;
+        if (player1.translateY <= ((275 / scaleFactor))) player1.translateY += .5;
     }
     if (isDown(key.S)) {
-        player1.translateY -= .5;
+        if (player1.translateY >= ((-275 / scaleFactor))) player1.translateY -= .5;
     }
     if (isDown(key.UP)) {
-        player2.translateY += 1;
+        if (player2.translateY <= ((275 / scaleFactor))) player2.translateY += .5;
     }
     if (isDown(key.DOWN)) {
-        player2.translateY -= 1;
+        if (player2.translateY >= ((-275 / scaleFactor))) player2.translateY -= .5;
     }
 
-    checkBoundaries();
-    moveBall();
+    if (timeCounterInMS >= frameIntervalInMS) {
+        moveBall();
+        checkBoundaries();
+        timeCounterInMS %= frameIntervalInMS;
+    }
+
     draw();
 
-    // console.log("Score ", gameManager.scorePlayer1, ":", gameManager.scorePlayer2);
     window.requestAnimationFrame(drawAnimated);
 
 }
 
-    let scaleFactor = 10
-function checkBoundaries() {
-    // check if touch player 1
-    if (ball.translateX <= player1.translateX) {
-        console.log("hello")
+let scaleFactor = player1.scaleY;
+let halfSizePlayer = player1.scaleY * 10 / 2;
 
-        if (ball.translateY <= (player1.translateY*scaleFactor + Math.abs(player1.translateY* scaleFactor)) && ball.translateY >= (player1.translateY - Math.abs(player1.translateY * scaleFactor))) {
+function checkBoundaries() {
+    // check if ball touch player 1
+    if (ball.translateX <= player1.translateX) {
+        if (ball.translateY <= player1.translateY * scaleFactor + halfSizePlayer && ball.translateY >= player1.translateY * scaleFactor - halfSizePlayer) {
             gameManager.ballDirectionX = 1;
-            console.log("ball.translateY ", ball.translateY)
-            console.log("player1.translateY ", player1.translateY)
-            var delta = player1.translateY*scaleFactor - ball.translateY;
-            console.log("Delta ", delta)
-            gameManager.ballDirectionY = -delta/scaleFactor*2;
+            var delta = player1.translateY * scaleFactor - ball.translateY;
+            gameManager.ballDirectionY = -delta / halfSizePlayer;
+            // debug();
         }
     } else
-    // check if touch player 2
+        // check if ball touch player 2
     if (ball.translateX >= player2.translateX) {
-        if (ball.translateY <= (player2.translateY*scaleFactor + Math.abs(player2.translateY* scaleFactor)) && ball.translateY >= (player2.translateY - Math.abs(player2.translateY * scaleFactor))) {
+        if (ball.translateY <= player2.translateY * scaleFactor + halfSizePlayer && ball.translateY >= player2.translateY * scaleFactor - halfSizePlayer) {
             gameManager.ballDirectionX = -1;
-            console.log("ball.translateY ", ball.translateY)
-            console.log("player2.translateY ", player2.translateY)
-            var delta = player2.translateY*scaleFactor - ball.translateY;
-            console.log("Delta " , delta)
-            gameManager.ballDirectionY = -delta/scaleFactor*2;
+            var delta = player2.translateY * scaleFactor - ball.translateY;
+            gameManager.ballDirectionY = -delta / halfSizePlayer;
+            // debug();
         }
     }
 
+    // check if ball behind player line
     if (ball.translateX < player1.translateX) {
         ++gameManager.scorePlayer2;
-        console.log("resetBall()")
         resetBall();
     } else if (ball.translateX > player2.translateX) {
         ++gameManager.scorePlayer1;
-        console.log("resetBall()")
         resetBall();
-    }
-    else if(ball.translateY >= 300 ){
+    } else if (ball.translateY >= 300) {
         gameManager.ballDirectionY = -gameManager.ballDirectionY;
     } else if (ball.translateY <= -300) {
         gameManager.ballDirectionY = -gameManager.ballDirectionY;
@@ -280,34 +309,32 @@ function moveBall() {
     ball.translateY += gameManager.ballDirectionY;
 }
 
-function resetBall(){
-    // console.log("ball.tanslateY: " , ball.translateY);
-    // // console.log("player1.tanslateY: " , player1.translateY);
-    // console.log("upper bound 1: " , player1.translateY + player1.translateY*scaleFactor);
-    // console.log("lover bound 1: " , player1.translateY - player1.translateY*scaleFactor);
-    // console.log("upper bound 2: " , player2.translateY + player2.translateY*scaleFactor);
-    // console.log("lover bound 2: " , player2.translateY - player2.translateY*scaleFactor);
-
+function resetBall() {
+    gameManager.updateUI()
+    // console.log("resetBall()")
+    // debug()
     ball.translateX = 0;
     ball.translateY = 0;
     gameManager.ballDirectionY = 0;
 }
 
+function debug() {
+    console.log("ball.tanslateY: ", ball.translateY);
+    console.log("player1.tanslateY: ", player1.translateY * scaleFactor);
+    console.log("upper bound 1: ", player1.translateY * scaleFactor + halfSizePlayer);
+    console.log("lover bound 1: ", player1.translateY * scaleFactor - halfSizePlayer);
+    console.log("player2.tanslateY: ", player2.translateY * scaleFactor);
+    console.log("upper bound 2: ", player2.translateY * scaleFactor + halfSizePlayer);
+    console.log("lover bound 2: ", player2.translateY * scaleFactor - halfSizePlayer);
+    console.log("Delta ", gameManager.ballDirectionY)
+}
+
 
 // Key Handling
 
-var key =
-    {
-        _pressed: {},
-        A: 65,
-        D: 68,
-        W: 87,
-        S: 83,
-        LEFT: 37,
-        UP: 38,
-        RIGHT: 39,
-        DOWN: 40
-    };
+var key = {
+    _pressed: {}, A: 65, D: 68, W: 87, S: 83, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, SPACE: 32,
+};
 
 
 function isDown(keyCode) {
@@ -319,7 +346,12 @@ function onKeydown(event) {
     key._pressed [event.keyCode] = true;
 }
 
+if (isDown(key.ENTER)) {
+    console.log("space")
+}
+
 
 function onKeyup(event) {
     delete key._pressed [event.keyCode];
 }
+

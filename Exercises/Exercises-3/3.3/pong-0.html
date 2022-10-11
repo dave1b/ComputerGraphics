@@ -2,14 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pong 0</title>
+    <title>Pong</title>
     <script type="text/javascript" src="webgl-debug.js"></script>
     <script type="text/javascript" src="shader-utils.js"></script>
     <script type="text/javascript" src="gl-matrix.js"></script>
     <script type="text/javascript" src="pong-0.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
 </head>
 <body>
-<h1>Pong 0</h1>
-<canvas id="myCanvas" width="800" height="600"></canvas>
+
+<div style="position: absolute; margin-left: auto; margin-right: auto; left: 0; right: 0; text-align: center; text-align: center">
+
+    <div>
+
+        <h1 id="score" class="display-2">0:0</h1>
+
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <div>
+            <button id="startBtn" onclick="startGame()" class="btn btn-success">Start</button>
+            <button id="startBtn" onclick="resetGame()" class="btn btn-danger">Reset</button>
+        </div>
+    </div>
 </body>
 </html>
