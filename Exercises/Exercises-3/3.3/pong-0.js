@@ -39,6 +39,7 @@ class GameManager {
         this.ballDirectionX = -1;
         this.ballDirectionY = 0;
         this.isGameRunning = false;
+        this.speed = 1.5;
     }
 
     updateUI() {
@@ -228,7 +229,7 @@ function draw() {
 // Window frame
 var previousTimestamp = 0;
 var timeCounterInMS = 0;
-let frameIntervalInMS = 2;
+let frameIntervalInMS = 1;
 var timeIntevall = 0;
 
 function drawAnimated(timeStamp) {
@@ -274,7 +275,7 @@ function checkBoundaries() {
     if (ball.translateX <= player1.translateX) {
         if (ball.translateY <= player1.translateY * scaleFactor + halfSizePlayer && ball.translateY >= player1.translateY * scaleFactor - halfSizePlayer) {
             gameManager.ballDirectionX = 1;
-            var delta = player1.translateY * scaleFactor - ball.translateY;
+            let delta = player1.translateY * scaleFactor - ball.translateY;
             gameManager.ballDirectionY = -delta / halfSizePlayer;
             // debug();
         }
@@ -283,17 +284,17 @@ function checkBoundaries() {
     if (ball.translateX >= player2.translateX) {
         if (ball.translateY <= player2.translateY * scaleFactor + halfSizePlayer && ball.translateY >= player2.translateY * scaleFactor - halfSizePlayer) {
             gameManager.ballDirectionX = -1;
-            var delta = player2.translateY * scaleFactor - ball.translateY;
+            let delta = player2.translateY * scaleFactor - ball.translateY;
             gameManager.ballDirectionY = -delta / halfSizePlayer;
             // debug();
         }
     }
 
     // check if ball behind player line
-    if (ball.translateX < player1.translateX) {
+    if (ball.translateX < player1.translateX-5) {
         ++gameManager.scorePlayer2;
         resetBall();
-    } else if (ball.translateX > player2.translateX) {
+    } else if (ball.translateX > player2.translateX+5) {
         ++gameManager.scorePlayer1;
         resetBall();
     } else if (ball.translateY >= 300) {
@@ -305,8 +306,8 @@ function checkBoundaries() {
 }
 
 function moveBall() {
-    ball.translateX += gameManager.ballDirectionX;
-    ball.translateY += gameManager.ballDirectionY;
+    ball.translateX += gameManager.ballDirectionX*gameManager.speed;
+    ball.translateY += gameManager.ballDirectionY*gameManager.speed;
 }
 
 function resetBall() {
