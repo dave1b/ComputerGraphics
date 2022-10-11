@@ -16,42 +16,53 @@ var gl;
 // we keep all local parameters for the program in a single object
 
 var ctx =
-{
-    shaderProgram: -1,
-    aVertexPositionId: -1,
-    uColorId: -1,
-    uProjectionMatId: -1,
-    uModelMatId: -1
-};
-
-
-
-
-class GameObjects
     {
-        translationX = 0;
-        translationY = 0;
-        buffer= -1;
+        shaderProgram: -1,
+        aVertexPositionId: -1,
+        uColorId: -1,
+        uProjectionMatId: -1,
+        uModelMatId: -1
+    };
+
+
+class GameObjects {
+    constructor(scalingX, scalingY, translateX, translateY) {
+        this.buffer = -1;
+        this.scaleX = scalingX;
+        this.scaleY = scalingY;
+        this.translateX = translateX;
+        this.translateY = translateY;
     }
+}
 
-    var player1 = new GameObjects();
-    var player2 = new GameObjects();
-    var ball = new GameObjects();
+class GameManager {
+    constructor(winScore) {
+        this.scoreToWin = winScore;
+        this.scorePlayer1 = 0;
+        this.scorePlayer2 = 0;
+        this.ballDirectionX = -1;
+        this.ballDirectionY = 0;
+    }
+}
 
+var player1 = new GameObjects(1, 5, -350, 0);
+var player2 = new GameObjects(1, 5, 350, 0);
+let net = new GameObjects(.5, 60, 0, 0);
+var ball = new GameObjects(1, 1, 0, 0);
+var gameManager = new GameManager(5);
 
 /**
  * Startup function to be called when the body is loaded
  */
 
-function startup ()
-{
+function startup() {
     "use strict";
-    var canvas = document.getElementById ("myCanvas");
-    gl = createGLContext (canvas);
+    var canvas = document.getElementById("myCanvas");
+    gl = createGLContext(canvas);
     initGL();
-    window.addEventListener ('keyup', onKeyup, false);
-    window.addEventListener ('keydown', onKeydown, false);
-    draw();
+    window.addEventListener('keyup', onKeyup, false);
+    window.addEventListener('keydown', onKeydown, false);
+    drawAnimated();
 }
 
 
@@ -59,14 +70,13 @@ function startup ()
  * InitGL should contain the functionality that needs to be executed only once
  */
 
-function initGL ()
-{
+function initGL() {
     "use strict";
-    ctx.shaderProgram = loadAndCompileShaders (gl, 'vertex-shader.glsl', 'fragment-shader.glsl');
+    ctx.shaderProgram = loadAndCompileShaders(gl, 'vertex-shader.glsl', 'fragment-shader.glsl');
     setUpAttributesAndUniforms();
     setUpBuffers();
 
-    gl.clearColor (0.1, 0.1, 0.1, 1.0);
+    gl.clearColor(0.1, 0.1, 0.1, 1.0);
 }
 
 
@@ -74,47 +84,53 @@ function initGL ()
  * Setup all the attribute and uniform variables
  */
 
-function setUpAttributesAndUniforms ()
-{
+function setUpAttributesAndUniforms() {
     "use strict";
-    ctx.aVertexPositionId = gl.getAttribLocation (ctx.shaderProgram, "aVertexPosition");
-    ctx.uColorId = gl.getUniformLocation (ctx.shaderProgram, "uColor");
-    ctx.uProjectionMatId = gl.getUniformLocation (ctx.shaderProgram, "uProjectionMat");
-    ctx.uModelMatId = gl.getUniformLocation (ctx.shaderProgram, "uModelMat");
+    ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
+    ctx.uColorId = gl.getUniformLocation(ctx.shaderProgram, "uColor");
+    ctx.uProjectionMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjectionMat");
+    ctx.uModelMatId = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
 
     // Set up the projection matrix
     var projectionMat = mat3.create();
-    mat3.fromScaling (projectionMat,
-        [2.0 / gl.drawingBufferWidth , 2.0 / gl.drawingBufferHeight]);
-    gl.uniformMatrix3fv (ctx.uProjectionMatId, false, projectionMat);
+    mat3.fromScaling(projectionMat,
+        [2.0 / gl.drawingBufferWidth, 2.0 / gl.drawingBufferHeight]);
+    gl.uniformMatrix3fv(ctx.uProjectionMatId, false, projectionMat);
 
-    // Set up the world coordinates
-    var modelMat = mat3.create();
-    mat3.identity (modelMat);
-    gl.uniformMatrix3fv (ctx.uModelMatId, false, modelMat);
+    /**
+     * Setup the buffers to use. If more objects are needed this should be split in a file per object.
+     */
 }
 
-
-/**
- * Setup the buffers to use. If more objects are needed this should be split in a file per object.
- */
-
-function setUpBuffers ()
-{
+function setUpBuffers() {
     var vertices =
         [
-            5,5,
-            5,-5,
-            -5,-5,
-            -5,5,
+            5, 5,
+            5, -5,
+            -5, -5,
+            -5, 5,
         ];
 
 
     "use strict";
+    // Net Buffer
+    net.buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, net.buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    // Ball Buffer
     ball.buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, ball.buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    // Player 1 Buffer
+    player1.buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, player1.buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    // Player  Buffer
+    player2.buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, player2.buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
 
-    gl.bindBuffer (gl.ARRAY_BUFFER, ball.buffer);
-    gl.bufferData (gl.ARRAY_BUFFER, new Float32Array (vertices), gl.STATIC_DRAW);
+
 }
 
 
@@ -122,76 +138,188 @@ function setUpBuffers ()
  * Draw the scene.
  */
 
-function draw ()
-{
+function draw() {
     var white = [1.0, 1.0, 1.0, 1.0];
 
     "use strict";
-    console.log ("Drawing");
-    gl.clear (gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
-    var m0 = mat3.create();
+
+    let m0 = mat3.create();
     mat3.identity(m0);
 
+    // Net
+    // Transformationsmatrix von befüllen lassen mit Parameter
+    /* var ballTranslationsM = mat3.create();
+    mat3.scale(ballTranslationsM, m0, [ball.scaleX, ball.scaleY])
+    mat3.translate(ballTranslationsM,ballTranslationsM,[ball.translateX,ball.translateY]) */
+
+    // Transformationsmatrix selber definieren:
+    var netTranslationsM = mat3.fromValues(net.scaleX, 0, net.translateX, 0, net.scaleY, net.translateY, 0, 0, 1);
+    gl.uniformMatrix3fv(ctx.uModelMatId, false, netTranslationsM);
+    gl.bindBuffer(gl.ARRAY_BUFFER, net.buffer);
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexPositionId);
+    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+    // Ball
     var ballTranslationsM = mat3.create();
-    mat3.scale(ballTranslationsM, m0, [3,0])
+    mat3.scale(ballTranslationsM, m0, [ball.scaleX, ball.scaleY])
+    mat3.translate(ballTranslationsM, ballTranslationsM, [ball.translateX, ball.translateY])
+    gl.uniformMatrix3fv(ctx.uModelMatId, false, ballTranslationsM);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ball.buffer);
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexPositionId);
+    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+    // Player 1
+    var player1TranslationsM = mat3.create();
+    mat3.scale(player1TranslationsM, m0, [player1.scaleX, player1.scaleY])
+    mat3.translate(player1TranslationsM, player1TranslationsM, [player1.translateX, player1.translateY])
+    gl.uniformMatrix3fv(ctx.uModelMatId, false, player1TranslationsM);
+    gl.bindBuffer(gl.ARRAY_BUFFER, player1.buffer);
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexPositionId);
+    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+    // Player 2
+    var player2TranslationsM = mat3.create();
+    mat3.scale(player2TranslationsM, m0, [player2.scaleX, player2.scaleY])
+    mat3.translate(player2TranslationsM, player2TranslationsM, [player2.translateX, player2.translateY])
+    gl.uniformMatrix3fv(ctx.uModelMatId, false, player2TranslationsM);
+    gl.bindBuffer(gl.ARRAY_BUFFER, player2.buffer);
+    gl.vertexAttribPointer(ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(ctx.aVertexPositionId);
+    gl.uniform4f(ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
+}
 
 
-    gl.bindBuffer (gl.ARRAY_BUFFER, ball.buffer);
-    gl.vertexAttribPointer (ctx.aVertexPositionId, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray (ctx.aVertexPositionId);
-    gl.uniform4f (ctx.uColorId, 1.0, 1.0, 1.0, 1.0);
-    gl.drawArrays (gl.TRIANGLE_FAN, 0, 4);
+// Window frame
+var previousTimestamp = 0;
+
+function drawAnimated(timeStamp) {
+    timeIntevall = timeStamp - previousTimestamp;
+    previousTimestamp = timeStamp;
+
+    // console.log("time: ", timeIntevall);
 
 
-    // var m0 = mat3.create();
-    // mat3.identity(m0);
-    //
-    // var m1 = mat3.create();
-    // mat3.translate( m1, m0, [100,125]);
-    // gl.uniformMatrix3fv (ctx.uModelMatId, false, m1);
+    if (isDown(key.W)) {
+        player1.translateY += .5;
+    }
+    if (isDown(key.S)) {
+        player1.translateY -= .5;
+    }
+    if (isDown(key.UP)) {
+        player2.translateY += 1;
+    }
+    if (isDown(key.DOWN)) {
+        player2.translateY -= 1;
+    }
 
-    // middle line
+    checkBoundaries();
+    moveBall();
+    draw();
 
+    // console.log("Score ", gameManager.scorePlayer1, ":", gameManager.scorePlayer2);
+    window.requestAnimationFrame(drawAnimated);
 
-    //
-    // var m2 = mat3.create();
-    // mat3.translate(m2,m0,[-50,-50]);
-    // gl.uniformMatrix3fv(ctx.uModelMatId, false,m2);
-    // gl.uniform4fv(ctx.uColorId, white);
-    // gl.drawArrays (gl.TRIANGLE_FAN, 0, 2);
+}
 
+    let scaleFactor = 10
+function checkBoundaries() {
+    // check if touch player 1
+    if (ball.translateX <= player1.translateX) {
+        console.log("hello")
 
+        if (ball.translateY <= (player1.translateY*scaleFactor + Math.abs(player1.translateY* scaleFactor)) && ball.translateY >= (player1.translateY - Math.abs(player1.translateY * scaleFactor))) {
+            gameManager.ballDirectionX = 1;
+            console.log("ball.translateY ", ball.translateY)
+            console.log("player1.translateY ", player1.translateY)
+            var delta = player1.translateY*scaleFactor - ball.translateY;
+            console.log("Delta ", delta)
+            gameManager.ballDirectionY = -delta/scaleFactor*2;
+        }
+    } else
+    // check if touch player 2
+    if (ball.translateX >= player2.translateX) {
+        if (ball.translateY <= (player2.translateY*scaleFactor + Math.abs(player2.translateY* scaleFactor)) && ball.translateY >= (player2.translateY - Math.abs(player2.translateY * scaleFactor))) {
+            gameManager.ballDirectionX = -1;
+            console.log("ball.translateY ", ball.translateY)
+            console.log("player2.translateY ", player2.translateY)
+            var delta = player2.translateY*scaleFactor - ball.translateY;
+            console.log("Delta " , delta)
+            gameManager.ballDirectionY = -delta/scaleFactor*2;
+        }
+    }
 
+    if (ball.translateX < player1.translateX) {
+        ++gameManager.scorePlayer2;
+        console.log("resetBall()")
+        resetBall();
+    } else if (ball.translateX > player2.translateX) {
+        ++gameManager.scorePlayer1;
+        console.log("resetBall()")
+        resetBall();
+    }
+    else if(ball.translateY >= 300 ){
+        gameManager.ballDirectionY = -gameManager.ballDirectionY;
+    } else if (ball.translateY <= -300) {
+        gameManager.ballDirectionY = -gameManager.ballDirectionY;
+    }
+
+}
+
+function moveBall() {
+    ball.translateX += gameManager.ballDirectionX;
+    ball.translateY += gameManager.ballDirectionY;
+}
+
+function resetBall(){
+    // console.log("ball.tanslateY: " , ball.translateY);
+    // // console.log("player1.tanslateY: " , player1.translateY);
+    // console.log("upper bound 1: " , player1.translateY + player1.translateY*scaleFactor);
+    // console.log("lover bound 1: " , player1.translateY - player1.translateY*scaleFactor);
+    // console.log("upper bound 2: " , player2.translateY + player2.translateY*scaleFactor);
+    // console.log("lover bound 2: " , player2.translateY - player2.translateY*scaleFactor);
+
+    ball.translateX = 0;
+    ball.translateY = 0;
+    gameManager.ballDirectionY = 0;
 }
 
 
 // Key Handling
 
 var key =
-{
-    _pressed: {},
+    {
+        _pressed: {},
+        A: 65,
+        D: 68,
+        W: 87,
+        S: 83,
+        LEFT: 37,
+        UP: 38,
+        RIGHT: 39,
+        DOWN: 40
+    };
 
-    LEFT: 37,
-    UP: 38,
-    RIGHT: 39,
-    DOWN: 40
-};
 
-
-function isDown (keyCode)
-{
+function isDown(keyCode) {
     return key._pressed [keyCode];
 }
 
 
-function onKeydown (event)
-{
+function onKeydown(event) {
     key._pressed [event.keyCode] = true;
 }
 
 
-function onKeyup (event)
-{
+function onKeyup(event) {
     delete key._pressed [event.keyCode];
 }
