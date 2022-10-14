@@ -54,11 +54,11 @@ class GameManager {
     updateUI() {
         document.getElementById("score").innerText = this.scorePlayer1 + ":" + this.scorePlayer2;
         if (this.scorePlayer1 == this.scoreToWin) {
-            alert("Player 1 has won!  \n Final Score " + this.scorePlayer1 + ":" + this.scorePlayer2);
-            this.resetGame()
+            alert("Player 1 has won!  \nFinal Score " + this.scorePlayer1 + ":" + this.scorePlayer2);
+            resetGame()
         } else if (this.scorePlayer2 == this.scoreToWin) {
             alert("Player 2 has won! \nFinal Score " + this.scorePlayer1 + ":" + this.scorePlayer2);
-            this.resetGame()
+            resetGame()
         }
     }
 
