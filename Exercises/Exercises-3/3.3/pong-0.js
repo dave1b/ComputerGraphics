@@ -29,6 +29,9 @@ class GameObjects {
         this.translateX = translateX;
         this.translateY = translateY;
     }
+    translateYToZero(){
+        this.translateY = 0;
+    }
 }
 
 class GameManager {
@@ -39,7 +42,9 @@ class GameManager {
         this.ballDirectionX = -1;
         this.ballDirectionY = 0;
         this.isGameRunning = false;
-        this.speed = 1.5;
+        this.speedX = 3;
+        this.speedY = 1.5;
+        // this.trickDuration = ;
     }
 
     updateUI() {
@@ -137,7 +142,6 @@ function setUpAttributesAndUniforms() {
 function setUpBuffers() {
     var vertices = [5, 5, 5, -5, -5, -5, -5, 5,];
 
-
     "use strict";
     // Net Buffer
     net.buffer = gl.createBuffer();
@@ -166,7 +170,6 @@ function setUpBuffers() {
  */
 
 function draw() {
-    var white = [1.0, 1.0, 1.0, 1.0];
 
     "use strict";
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -174,6 +177,7 @@ function draw() {
 
     let m0 = mat3.create();
     mat3.identity(m0);
+
 
     // Net
     // Transformationsmatrix von befüllen lassen mit Parameter
@@ -189,6 +193,7 @@ function draw() {
     gl.enableVertexAttribArray(ctx.aVertexPositionId);
     gl.uniform4fv(ctx.uColorId, net.color);
     gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+
 
     // Ball
     var ballTranslationsM = mat3.create();
@@ -229,7 +234,7 @@ function draw() {
 // Window frame
 var previousTimestamp = 0;
 var timeCounterInMS = 0;
-let frameIntervalInMS = 1;
+let frameIntervalInMS = 10;
 var timeIntevall = 0;
 
 function drawAnimated(timeStamp) {
@@ -243,16 +248,24 @@ function drawAnimated(timeStamp) {
     timeCounterInMS += timeIntevall;
 
     if (isDown(key.W)) {
-        if (player1.translateY <= ((275 / scaleFactor))) player1.translateY += .5;
+        if (player1.translateY <= ((275 / scaleFactor))) {
+            player1.translateY += .5;
+        }
     }
     if (isDown(key.S)) {
-        if (player1.translateY >= ((-275 / scaleFactor))) player1.translateY -= .5;
+        if (player1.translateY >= ((-275 / scaleFactor))) {
+            player1.translateY -= .5;
+        }
     }
     if (isDown(key.UP)) {
-        if (player2.translateY <= ((275 / scaleFactor))) player2.translateY += .5;
+        if (player2.translateY <= ((275 / scaleFactor))) {
+            player2.translateY += .5;
+        }
     }
     if (isDown(key.DOWN)) {
-        if (player2.translateY >= ((-275 / scaleFactor))) player2.translateY -= .5;
+        if (player2.translateY >= ((-275 / scaleFactor))) {
+            player2.translateY -= .5;
+        }
     }
 
     if (timeCounterInMS >= frameIntervalInMS) {
@@ -306,8 +319,8 @@ function checkBoundaries() {
 }
 
 function moveBall() {
-    ball.translateX += gameManager.ballDirectionX*gameManager.speed;
-    ball.translateY += gameManager.ballDirectionY*gameManager.speed;
+    ball.translateX += gameManager.ballDirectionX*gameManager.speedX;
+    ball.translateY += gameManager.ballDirectionY*gameManager.speedY;
 }
 
 function resetBall() {
@@ -317,6 +330,8 @@ function resetBall() {
     ball.translateX = 0;
     ball.translateY = 0;
     gameManager.ballDirectionY = 0;
+    player1.translateYToZero();
+    player1.translateYToZero();
 }
 
 function debug() {
