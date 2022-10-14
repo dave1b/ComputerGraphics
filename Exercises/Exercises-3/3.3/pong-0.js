@@ -43,8 +43,9 @@ class GameManager {
         this.ballDirectionX = -1;
         this.ballDirectionY = 0;
         this.isGameRunning = false;
-        this.speedX = 4;
-        this.speedY = 1.5;
+        this.ballPixelMovementPerSecond = 300;
+        this.speedX = 2;
+        this.speedY = 1.0;
         // this.trickDuration = ;
     }
 
@@ -60,8 +61,14 @@ class GameManager {
     }
 
     resetGame() {
+        gameManager.isGameRunning = false;
         this.scorePlayer1 = 0;
         this.scorePlayer2 = 0;
+    }
+
+    getSpeedY(){
+        this.speedY = this.speedX/2;
+        return this.speedY;
     }
 }
 
@@ -96,7 +103,6 @@ function startGame() {
 }
 
 function resetGame() {
-    gameManager.isGameRunning = false;
     gameManager.resetGame();
     player1.translateY = 0;
     player2.translateY = 0;
@@ -235,17 +241,15 @@ function draw() {
 // Window frame
 var previousTimestamp = 0;
 var timeCounterInMS = 0;
-let frameIntervalInMS = 20;
-var timeIntevall = 0;
+var timeInterval = 0;
+var ballLastXPosition = 0;
+var ballPixelMovementsInSecond = 0;
+
 
 function drawAnimated(timeStamp = 0) {
     if (!gameManager.isGameRunning) {
         return
     }
-    timeIntevall = timeStamp - previousTimestamp;
-    previousTimestamp = timeStamp;
-
-    timeCounterInMS += timeIntevall;
 
     if (isDown(key.W)) {
         if (player1.translateY <= ((275 / scaleFactor))) {
@@ -268,12 +272,25 @@ function drawAnimated(timeStamp = 0) {
         }
     }
 
-    if (timeCounterInMS >= frameIntervalInMS) {
-        moveBall();
-        checkBoundaries();
-        timeCounterInMS %= frameIntervalInMS;
+    timeInterval = timeStamp - previousTimestamp
+    timeCounterInMS += timeInterval;
+    previousTimestamp = timeStamp;
+
+    if (timeCounterInMS >= 100) {
+        ballPixelMovementsInSecond = 10*(Math.abs(ball.translateX - ballLastXPosition));
+        console.log("ballPixelMovementsInSecond: " , ballPixelMovementsInSecond)
+        if (ballPixelMovementsInSecond > gameManager.ballPixelMovementPerSecond) {
+            gameManager.speedX -= 0.05;
+        } else if (ballPixelMovementsInSecond < gameManager.ballPixelMovementPerSecond) {
+            gameManager.speedX += 0.05;
+        }
+        timeCounterInMS = 0;
+        ballPixelMovementsInSecond = 0;
+        ballLastXPosition = ball.translateX;
     }
 
+    moveBall();
+    checkBoundaries();
     draw();
 
     window.requestAnimationFrame(drawAnimated);
@@ -320,7 +337,7 @@ function checkBoundaries() {
 
 function moveBall() {
     ball.translateX += gameManager.ballDirectionX * gameManager.speedX;
-    ball.translateY += gameManager.ballDirectionY * gameManager.speedY;
+    ball.translateY += gameManager.ballDirectionY * gameManager.getSpeedY();
 }
 
 function resetBall() {
@@ -331,7 +348,7 @@ function resetBall() {
     ball.translateY = 0;
     gameManager.ballDirectionY = 0;
     player1.translateYToZero();
-    player1.translateYToZero();
+    player2.translateYToZero();
 }
 
 function debug() {
