@@ -29,7 +29,8 @@ class GameObjects {
         this.translateX = translateX;
         this.translateY = translateY;
     }
-    translateYToZero(){
+
+    translateYToZero() {
         this.translateY = 0;
     }
 }
@@ -42,7 +43,7 @@ class GameManager {
         this.ballDirectionX = -1;
         this.ballDirectionY = 0;
         this.isGameRunning = false;
-        this.speedX = 3;
+        this.speedX = 4;
         this.speedY = 1.5;
         // this.trickDuration = ;
     }
@@ -234,17 +235,16 @@ function draw() {
 // Window frame
 var previousTimestamp = 0;
 var timeCounterInMS = 0;
-let frameIntervalInMS = 10;
+let frameIntervalInMS = 20;
 var timeIntevall = 0;
 
-function drawAnimated(timeStamp) {
+function drawAnimated(timeStamp = 0) {
     if (!gameManager.isGameRunning) {
         return
     }
-    if (!isNaN(timeStamp)) {
-        timeIntevall = timeStamp - previousTimestamp;
-        previousTimestamp = timeStamp;
-    }
+    timeIntevall = timeStamp - previousTimestamp;
+    previousTimestamp = timeStamp;
+
     timeCounterInMS += timeIntevall;
 
     if (isDown(key.W)) {
@@ -304,10 +304,10 @@ function checkBoundaries() {
     }
 
     // check if ball behind player line
-    if (ball.translateX < player1.translateX-5) {
+    if (ball.translateX < player1.translateX - 5) {
         ++gameManager.scorePlayer2;
         resetBall();
-    } else if (ball.translateX > player2.translateX+5) {
+    } else if (ball.translateX > player2.translateX + 5) {
         ++gameManager.scorePlayer1;
         resetBall();
     } else if (ball.translateY >= 300) {
@@ -319,8 +319,8 @@ function checkBoundaries() {
 }
 
 function moveBall() {
-    ball.translateX += gameManager.ballDirectionX*gameManager.speedX;
-    ball.translateY += gameManager.ballDirectionY*gameManager.speedY;
+    ball.translateX += gameManager.ballDirectionX * gameManager.speedX;
+    ball.translateY += gameManager.ballDirectionY * gameManager.speedY;
 }
 
 function resetBall() {
@@ -361,11 +361,6 @@ function isDown(keyCode) {
 function onKeydown(event) {
     key._pressed [event.keyCode] = true;
 }
-
-if (isDown(key.ENTER)) {
-    console.log("space")
-}
-
 
 function onKeyup(event) {
     delete key._pressed [event.keyCode];
