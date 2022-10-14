@@ -44,6 +44,8 @@ class GameManager {
         this.ballDirectionY = 0;
         this.isGameRunning = false;
         this.ballPixelMovementPerSecond = 300;
+        this.BALLPIXELMOVEMENTPERSECONMAX = 600;
+        this.BALLPIXELMOVEMENTPERSECONMIN = 150;
         this.speedX = 2;
         this.speedY = 1.0;
         // this.trickDuration = ;
@@ -66,8 +68,8 @@ class GameManager {
         this.scorePlayer2 = 0;
     }
 
-    getSpeedY(){
-        this.speedY = this.speedX/2;
+    getSpeedY() {
+        this.speedY = this.speedX / 2;
         return this.speedY;
     }
 }
@@ -90,9 +92,14 @@ function startup() {
     window.addEventListener('keyup', onKeyup, false);
     window.addEventListener('keydown', onKeydown, false);
     draw();
+
 }
 
+
 function startGame() {
+    if (gameManager.isGameRunning) {
+        return
+    }
     var startDirection = 0;
     while (startDirection == 0) {
         startDirection = Math.floor(Math.random() * (-1 - 2)) + 2;
@@ -110,6 +117,25 @@ function resetGame() {
     draw();
 }
 
+function increaseSpeed() {
+    if (gameManager.ballPixelMovementPerSecond < gameManager.BALLPIXELMOVEMENTPERSECONMAX) {
+        gameManager.ballPixelMovementPerSecond += 50;
+        document.getElementById("decreaseSpeedBtn").disabled = false;
+
+    } else {
+        document.getElementById("increaseSpeedBtn").disabled = true;
+    }
+}
+
+function decreaseSpeed() {
+    if (gameManager.ballPixelMovementPerSecond > gameManager.BALLPIXELMOVEMENTPERSECONMIN) {
+        gameManager.ballPixelMovementPerSecond -= 50;
+        document.getElementById("increaseSpeedBtn").disabled = false;
+
+    } else {
+        document.getElementById("decreaseSpeedBtn").disabled = true;
+    }
+}
 
 /**
  * InitGL should contain the functionality that needs to be executed only once
@@ -247,28 +273,31 @@ var ballPixelMovementsInSecond = 0;
 
 
 function drawAnimated(timeStamp = 0) {
+    if (isDown(key.SPACE)) {
+        gameManager.isGameRunning = true;
+    }
     if (!gameManager.isGameRunning) {
         return
     }
 
     if (isDown(key.W)) {
         if (player1.translateY <= ((275 / scaleFactor))) {
-            player1.translateY += .5;
+            player1.translateY += gameManager.getSpeedY() / 3;
         }
     }
     if (isDown(key.S)) {
         if (player1.translateY >= ((-275 / scaleFactor))) {
-            player1.translateY -= .5;
+            player1.translateY -= gameManager.getSpeedY() / 3;
         }
     }
     if (isDown(key.UP)) {
         if (player2.translateY <= ((275 / scaleFactor))) {
-            player2.translateY += .5;
+            player2.translateY += gameManager.getSpeedY() / 3;
         }
     }
     if (isDown(key.DOWN)) {
         if (player2.translateY >= ((-275 / scaleFactor))) {
-            player2.translateY -= .5;
+            player2.translateY -= gameManager.getSpeedY() / 3;
         }
     }
 
@@ -277,15 +306,15 @@ function drawAnimated(timeStamp = 0) {
     previousTimestamp = timeStamp;
 
     if (timeCounterInMS >= 100) {
-        ballPixelMovementsInSecond = 10*(Math.abs(ball.translateX - ballLastXPosition));
-        console.log("ballPixelMovementsInSecond: " , ballPixelMovementsInSecond)
+        ballPixelMovementsInSecond = 10 * (Math.abs(ball.translateX - ballLastXPosition));
+        console.log("ballPixelMovementsInSecond: ", ballPixelMovementsInSecond)
         if (ballPixelMovementsInSecond > gameManager.ballPixelMovementPerSecond) {
             gameManager.speedX -= 0.05;
         } else if (ballPixelMovementsInSecond < gameManager.ballPixelMovementPerSecond) {
             gameManager.speedX += 0.05;
         }
         timeCounterInMS = 0;
-        ballPixelMovementsInSecond = 0;
+        ballPixelMovementsInSecond %= 100;
         ballLastXPosition = ball.translateX;
     }
 
@@ -341,14 +370,15 @@ function moveBall() {
 }
 
 function resetBall() {
+    gameManager.isGameRunning = false;
     gameManager.updateUI()
-    // console.log("resetBall()")
-    // debug()
     ball.translateX = 0;
     ball.translateY = 0;
+    draw();
     gameManager.ballDirectionY = 0;
     player1.translateYToZero();
     player2.translateYToZero();
+
 }
 
 function debug() {
@@ -364,7 +394,6 @@ function debug() {
 
 
 // Key Handling
-
 var key = {
     _pressed: {}, A: 65, D: 68, W: 87, S: 83, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, ENTER: 13, SPACE: 32,
 };
@@ -383,3 +412,8 @@ function onKeyup(event) {
     delete key._pressed [event.keyCode];
 }
 
+document.addEventListener('keyup', event => {
+    if (event.code === 'Space') {
+        startGame();
+    }
+})
