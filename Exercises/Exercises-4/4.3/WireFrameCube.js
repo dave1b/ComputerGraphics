@@ -1,10 +1,12 @@
 class WireFrameCube {
 
     constructor(color) {
-        console.log("wireframecube constructor")
         this.color = color
         this.vertices = this.#defineVertices()
         this.edges = this.#defineEdges()
+        this.rotateX = -20.0;
+        this.rotateY = -30.0;
+        this.rotateZ = 0;
     }
 
     #defineVertices() {

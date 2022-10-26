@@ -3728,7 +3728,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {mat4} out mat4 frustum matrix will be written into
 	 * @param {vec3} eye Position of the viewer
 	 * @param {vec3} center Point the viewer is looking at
-	 * @param {vec3} up vec3 pointing up
+	 * @param {number[]} up vec3 pointing up
 	 * @returns {mat4} out
 	 */
 	mat4.lookAt = function (out, eye, center, up) {

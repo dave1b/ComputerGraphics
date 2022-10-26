@@ -76,12 +76,16 @@ function setUpAttributesAndUniforms ()
     var asp = gl.drawingBufferWidth / gl.drawingBufferHeight;
     if (mode)
     {
+        console.log("skdjf")
         var fov = 40 * Math.PI / 180;
         mat4.perspective (projectionMat, fov, asp, dist - 1, dist + 1);
     }
     else
         mat4.scale (projectionMat, projectionMat, [1, asp, 1, 1]);
     gl.uniformMatrix4fv (ctx.uProjectionMatId, false, projectionMat);
+
+
+
 
     //  set up the modelview matrix
 
