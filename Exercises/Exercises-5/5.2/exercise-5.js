@@ -5,12 +5,11 @@ var ctx =
     {
         shaderProgram: -1,
         aVertexPositionId: -1,
-        uColorId: -1,
+        aColorId: -1,
         uProjectionMatId: -1,
         uModelMatId: -1,
         uViewMatId: -1,
         uEnableTexture: -1,
-        aVertexTextureCoordId: -1
 
     };
 
@@ -32,7 +31,7 @@ function startup() {
     "use strict";
     var canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
-    solidCube = new WireFrameCube()
+    texturedCube = new WireFrameCube()
     initGL();
     loadTexture();
     draw();
@@ -42,24 +41,24 @@ function initGL() {
     "use strict";
     ctx.shaderProgram = loadAndCompileShaders(gl, 'vertex-shader.glsl', 'fragment-shader.glsl');
     // set the clear color here
-    gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST)
     // gl.frontFace(gl.CCW)
     // gl.cullFace(gl.BACK)
     // gl.enable(gl.CULL_FACE)
-    solidCube.bindBuffers(gl)
     setUpAttributesAndUniforms()
+    texturedCube.bindBuffers(gl)
+    gl.clearColor(0, 0, 0, 1);
 }
 
 function setUpAttributesAndUniforms() {
     "use strict";
-    ctx.aVertexPositionId = gl.getAttribLocation(ctx.shaderProgram, "aVertexPosition");
-    ctx.uColorId = gl.getAttribLocation(ctx.shaderProgram, "uColor");
+    ctx.aVertexPositionId = gl.getAttribLocation (ctx.shaderProgram, "aVertexPosition");
+    ctx.aVertexTextureCoordId = gl.getAttribLocation (ctx.shaderProgram, "aVertexTextureCoord");
+    ctx.aColorId = gl.getAttribLocation(ctx.shaderProgram, "aColor");
     ctx.uProjectionMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjectionMat");
     ctx.uModelMatId = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
     ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
     ctx.uEnableTextureId = gl.getUniformLocation(ctx.shaderProgram, "uEnableTexture");
-    ctx.uSamplerId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
 
     let distance = 5;
 
@@ -74,11 +73,9 @@ function setUpAttributesAndUniforms() {
     // modelMat
     var modelMat = mat4.create();
     mat4.translate (modelMat, modelMat, [0, 0, -distance]);
-    console.log(modelMat);
-    mat4.rotate (modelMat, modelMat, solidCube.roatationX * Math.PI / 180.0, [1, 0, 0]);
-    mat4.rotate (modelMat, modelMat, solidCube.roatationY * Math.PI / 180.0, [0, 1, 0]);
-    mat4.rotate (modelMat, modelMat, solidCube.roatationZ * Math.PI / 180.0, [0, 0, 1]);
-    console.log(modelMat);
+    mat4.rotate (modelMat, modelMat, texturedCube.roatationX * Math.PI / 180.0, [1, 0, 0]);
+    mat4.rotate (modelMat, modelMat, texturedCube.roatationY * Math.PI / 180.0, [0, 1, 0]);
+    mat4.rotate (modelMat, modelMat, texturedCube.roatationZ * Math.PI / 180.0, [0, 0, 1]);
     gl.uniformMatrix4fv(ctx.uModelMatId, false, modelMat)
 
     // viewMat
@@ -126,5 +123,5 @@ function loadTexture ()
 }
 
 function draw() {
-    solidCube.draw(gl,ctx)
+    texturedCube.draw(gl,ctx)
 }

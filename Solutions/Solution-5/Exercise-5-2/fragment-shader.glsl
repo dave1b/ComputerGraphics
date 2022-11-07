@@ -1,10 +1,11 @@
 precision mediump float;
 
-uniform int uEnableTexture ;
-uniform sampler2D uSampler;
-
 varying vec4 vColor;
 varying vec2 vTextureCoord;
+
+uniform sampler2D uSampler;
+uniform int uEnableTexture;
+
 
 void main ()
 {
