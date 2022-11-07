@@ -1,5 +1,5 @@
 # ComputerGraphics
-This is a repository where I learn how webGL works and how to use it.
+This is a project where I learn how webGL works and how to use it.
 
 
 ### Some projects:
