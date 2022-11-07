@@ -13,13 +13,15 @@ var ctx =
     };
 
 // objects
-let wireFrameCube;
+let wireFrameCubeRed;
+let wireFrameCubeCyan;
 
 function startup() {
     "use strict";
     var canvas = document.getElementById("myCanvas");
     gl = createGLContext(canvas);
-    wireFrameCube = new WireFrameCube([1, 1, 1])
+    wireFrameCubeRed = new WireFrameCube([1, 0, 0])
+    wireFrameCubeCyan = new WireFrameCube([0, 1, 1])
     initGL();
     drawAnimated();
 }
@@ -27,11 +29,10 @@ function startup() {
 function initGL() {
     "use strict";
     ctx.shaderProgram = loadAndCompileShaders(gl, 'vertex-shader.glsl', 'fragment-shader.glsl');
-    setUpAttributesAndUniforms()
-    // Bind Buffer
-    wireFrameCube.bindBuffers(gl)
     // set the clear color here
     gl.clearColor(0, 0, 0, 1);
+    // Bind Buffer
+    setUpAttributesAndUniforms()
 }
 
 function setUpAttributesAndUniforms() {
@@ -44,6 +45,7 @@ function setUpAttributesAndUniforms() {
     ctx.uZmaxId = gl.getUniformLocation(ctx.shaderProgram, "uZmax");
 
     let distance = 3;
+    let eyeDistance = 0.015
     var zMin = -distance - 1;
     var zMax = -distance + 1;
 
@@ -53,34 +55,47 @@ function setUpAttributesAndUniforms() {
     mat4.perspective(projectionMat, fov, aspect, -zMax, -zMin)
     gl.uniformMatrix4fv(ctx.uProjectionMatId, false, projectionMat)
 
-
-    // verschiedene Kameraperspektiven
+    wireFrameCubeRed.bindBuffers(gl)
+    // RedCube
     var modelViewMat = mat4.create();
-
     mat4.translate (modelViewMat, modelViewMat, [0, 0, -distance]);
-    mat4.rotate (modelViewMat, modelViewMat, wireFrameCube.rotateX * Math.PI / 180.0, [1, 0, 0]);
-    mat4.rotate (modelViewMat, modelViewMat, wireFrameCube.rotateY * Math.PI / 180.0, [0, 1, 0]);
-    // mat4.lookAt(modelViewMkat, [0, 0, -distance], [0, 0, 0], [0, 1, 0]);
-    // mat4.rotate(modelViewMat, modelViewMat, wireFrameCube.rotateX * Math.PI / 180.0, [0.577, 0.577, 0.577]);
-    // // mat4.rotate (modelViewMat, modelViewMat, wireFrameCube.rotateY* Math.PI / 180.0, [0, 1, 0]);
-    // // mat4.rotate (modelViewMat, modelViewMat, wireFrameCube.rotateZ* Math.PI / 180.0, [0, 0, 1]);
+    mat4.rotate (modelViewMat, modelViewMat, wireFrameCubeRed.rotateX * Math.PI / 180.0, [1, 0, 0]);
+    mat4.rotate (modelViewMat, modelViewMat, wireFrameCubeRed.rotateY * Math.PI / 180.0, [0, 1, 0]);
     gl.uniformMatrix4fv(ctx.uModelViewMatId, false, modelViewMat)
-
     gl.uniform1f(ctx.uZminId, zMin);
     gl.uniform1f(ctx.uZmaxId, zMax -1);
+    wireFrameCubeRed.draw(gl, ctx)
 
+
+    wireFrameCubeCyan.bindBuffers(gl)
+    // CyanCube
+    var modelViewMat = mat4.create();
+    mat4.translate (modelViewMat, modelViewMat, [0+eyeDistance, 0+ eyeDistance, -distance+ eyeDistance]);
+    mat4.rotate (modelViewMat, modelViewMat, wireFrameCubeCyan.rotateX * Math.PI / 180.0, [1, 0, 0]);
+    mat4.rotate (modelViewMat, modelViewMat, wireFrameCubeCyan.rotateY * Math.PI / 180.0, [0, 1, 0]);
+    gl.uniformMatrix4fv(ctx.uModelViewMatId, false, modelViewMat)
+    gl.uniform1f(ctx.uZminId, zMin);
+    gl.uniform1f(ctx.uZmaxId, zMax -1);
+    wireFrameCubeCyan.draw(gl, ctx)
+
+    // CyanCube
 }
 
 function draw() {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    wireFrameCube.draw(gl, ctx);
+
 }
 
 function drawAnimated(timeStamp = 0) {
-    wireFrameCube.rotateX -= 0.3;
-    wireFrameCube.rotateY -= 0.3;
+    let speed = 0.5
+    wireFrameCubeRed.rotateX -= speed;
+    wireFrameCubeRed.rotateY -= speed;
+    wireFrameCubeCyan.rotateX -= speed;
+    wireFrameCubeCyan.rotateY -=speed;
+    // wireFrameCubeCyan.rotateX -= 0.3;
+    // wireFrameCubeCyan.rotateY -= 0.3;
+    gl.clear(gl.COLOR_BUFFER_BIT);
     setUpAttributesAndUniforms();
-    draw();
+    // draw();
     window.requestAnimationFrame(drawAnimated);
 
 }

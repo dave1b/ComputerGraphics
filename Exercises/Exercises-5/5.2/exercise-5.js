@@ -9,6 +9,9 @@ var ctx =
         uProjectionMatId: -1,
         uModelMatId: -1,
         uViewMatId: -1,
+        uEnableTexture: -1,
+        aVertexTextureCoordId: -1
+
     };
 
 scene = {
@@ -18,7 +21,12 @@ scene = {
 }
 
 // objects
-let solidCube;
+let texturedCube;
+
+var lennaTxt =
+    {
+        textureObj: { }
+    };
 
 function startup() {
     "use strict";
@@ -26,6 +34,7 @@ function startup() {
     gl = createGLContext(canvas);
     solidCube = new WireFrameCube()
     initGL();
+    loadTexture();
     draw();
 }
 
@@ -49,6 +58,8 @@ function setUpAttributesAndUniforms() {
     ctx.uProjectionMatId = gl.getUniformLocation(ctx.shaderProgram, "uProjectionMat");
     ctx.uModelMatId = gl.getUniformLocation(ctx.shaderProgram, "uModelMat");
     ctx.uViewMatId = gl.getUniformLocation(ctx.shaderProgram, "uViewMat");
+    ctx.uEnableTextureId = gl.getUniformLocation(ctx.shaderProgram, "uEnableTexture");
+    ctx.uSamplerId = gl.getUniformLocation(ctx.shaderProgram, "uSampler");
 
     let distance = 5;
 
@@ -79,6 +90,39 @@ function setUpAttributesAndUniforms() {
     gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMat);
 
 
+}
+
+
+function initTexture (image, textureObject)
+{
+    // create a new texture
+    gl.bindTexture (gl.TEXTURE_2D, textureObject);
+
+    // set parameters for the texture
+    gl.pixelStorei (gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texImage2D (gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.generateMipmap (gl.TEXTURE_2D);
+
+    // turn texture off again
+    gl.bindTexture (gl.TEXTURE_2D, null);
+}
+
+function loadTexture ()
+{
+    var image = new Image();
+    // create a texture object
+    lennaTxt.textureObj = gl.createTexture();
+    image.onload = function()
+    {
+        initTexture (image, lennaTxt.textureObj);
+        console.log ("Texture loaded");
+        // make sure there is a redraw after the loading of the texture
+        draw();
+    };
+    // setting the src will trigger onload
+    image.src = "lena512.png";
 }
 
 function draw() {
