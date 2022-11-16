@@ -107,6 +107,9 @@ function SolidSphere(gl, latitudeBands, longitudeBands, color) {
     var indices = defineIndices(latitudeBands, longitudeBands);
 
     var sphere = {};
+    sphere.roatationX = 0,
+    sphere.roatationY = 0,
+    sphere.roatationZ = 0,
 
     sphere.bufferVertices  = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, sphere.bufferVertices);

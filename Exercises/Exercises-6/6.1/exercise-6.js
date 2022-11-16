@@ -66,7 +66,6 @@ function setUpAttributesAndUniforms(object, xPosition=0, yPosition=0, zPosition=
     ctx.uProjectionMatrix = gl.getUniformLocation (ctx.shaderProgram, "uProjectionMatrix");
     ctx.uNormalMatrix = gl.getUniformLocation(ctx.shaderProgram, "uNormalMatrix");
 
-
     ctx.uEnableTexture = gl.getUniformLocation(ctx.shaderProgram, "uEnableTexture");
     ctx.uEnableLighting = gl.getUniformLocation(ctx.shaderProgram, "uEnableLighting");
     ctx.uLightPosition = gl.getUniformLocation(ctx.shaderProgram, "uLightPosition");
@@ -83,21 +82,21 @@ function setUpAttributesAndUniforms(object, xPosition=0, yPosition=0, zPosition=
     // mat4.ortho(projectionMat, [-1,0,0], [1,0,0],[0,-1,0],[0,1,0], distance, -distance)
     gl.uniformMatrix4fv(ctx.uProjectionMatId, false, projectionMat)
 
-    // modelMat
-    var modelMat = mat4.create();
-    mat4.translate (modelMat, modelMat, [xPosition, yPosition, -distance]);
-    mat4.rotate (modelMat, modelMat, object.roatationX * Math.PI / 180.0, [1, 0, 0]);
-    mat4.rotate (modelMat, modelMat, object.roatationY * Math.PI / 180.0, [0, 1, 0]);
-    mat4.rotate (modelMat, modelMat, object.roatationZ * Math.PI / 180.0, [0, 0, 1]);
-    gl.uniformMatrix4fv(ctx.uModelMatId, false, modelMat)
+    // modelVieMat
+    var modelViewMat = mat4.create();
+    mat4.translate (modelViewMat, modelViewMat, [xPosition, yPosition, -distance]);
+    mat4.rotate (modelViewMat, modelViewMat, object.roatationX * Math.PI / 180.0, [1, 0, 0]);
+    mat4.rotate (modelViewMat, modelViewMat, object.roatationY * Math.PI / 180.0, [0, 1, 0]);
+    mat4.rotate (modelViewMat, modelViewMat, object.roatationZ * Math.PI / 180.0, [0, 0, 1]);
+    gl.uniformMatrix4fv(ctx.uModelViewMatrix, false, modelViewMat)
 
-    // viewMat
-    var viewMat = mat4.create();
-    mat4.translate (viewMat, viewMat, [0, 0, 0]);
-    mat4.rotate(viewMat,viewMat, scene.cameraRotationX * Math.PI / 180.0, [1,0,0])
-    mat4.rotate(viewMat,viewMat, scene.cameraRotationY * Math.PI / 180.0, [0,1,0])
-    mat4.rotate(viewMat,viewMat, scene.cameraRotationZ * Math.PI / 180.0, [0,0,1])
-    gl.uniformMatrix4fv(ctx.uViewMatId, false, viewMat);
+    // normalMat
+    var normalMat = mat4.create();
+    mat4.translate (normalMat, normalMat, [xPosition, yPosition, -distance]);
+    gl.uniformMatrix4fv(ctx.uNormalMatrix, false, normalMat)
+
+
+
 
 }
 
@@ -137,8 +136,8 @@ function loadTexture ()
 function drawAnimated(timeStamp = 0) {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    setUpAttributesAndUniforms(scene.circle);
-    draw(scene.circle)
+    setUpAttributesAndUniforms(scene.sphere);
+    draw(scene.sphere)
 
 
     window.requestAnimationFrame(drawAnimated);
